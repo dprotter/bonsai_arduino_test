@@ -45,20 +45,18 @@ class BonsaiSender:
         # Initialize the port
         try:
             self.ser = ser.Serial(self.port, self.baudRate)
-            self.command_dict = self.get_commands() # Assign the commands property
 
             start = time.time() 
-            self.send_data('startup_test')
             
             while self.sending and time.time() - start < self.timeout:
                 time.sleep(0.05)
             finished = time.time()
             if finished - start > self.timeout:
                 print('serial sender failed to send test message ')
-        except:
+        except Exception as e:
             print('serial sender failed setup. If not sending serial data for Bonsai integration, ignore this warning.')
-        
-        self.active = True
+            print(e)
+        self.active = False
 
 
     def busy(self):
@@ -72,42 +70,39 @@ class BonsaiSender:
     
     @thread_it
     def run(self):
-        while not self.finished:
-            
-            if not self.command_stack.empty():
-                command = self.command_stack.get()
-                
-                self._send_data(command)
-                
-            time.sleep(0.05)
-
-        while not self.command_stack.empty():
-            
+        self.active = True
+        
+        if not self.command_stack.empty():
             command = self.command_stack.get()
             self._send_data(command)
-            self.sleep(0.05)
+            while not self.command_stack.empty():
+                command = self.command_stack.get()
+                self._send_data(command)
         self.active = False
 
     def send_data(self, pin, value):
+        
         self.command_stack.put(f'{pin}|{value}')
-     
+        if not self.active:
+            self.run()
+        else:
+            print('run already active')
 
-
+    def _send_string(self, string):
+        formatted = string + '\r'
+        formatted = formatted.encode('ascii')
+        
+        self.ser.write(formatted)
+        print(f'\n\nserial message sent: {string}\n\n')
+        
     def _send_data(self, command):
         # SEND_DATA sends the data through the associated serial port, and then logs all the commands that have been send to the self.history queue object.
         self.sending = True
-        if not command in self.command_dict.keys():
-            print(f'WARNING: "{command}" is not a valid command being sent, will not be read by the Arduino and Bonsai')
-            print(self.command_dict.keys())
-            return 
-        elif not self.command_dict[command]['send to bonsai']:
-            print(f'WARNING: command {command} was passed to the serial encoder, but attribute "send to bonsai" is FALSE. This will not be sent off the pi.') 
-            return
-        else:
-            formatted = command + '\r'
-            formatted = formatted.encode('ascii')
-            
-            self.ser.write(formatted)
+
+        formatted = command + '\r'
+        formatted = formatted.encode('ascii')
+        
+        self.ser.write(formatted)
         print(f'\n\nserial message sent: {command}\n\n')
         self.sending = False
     
