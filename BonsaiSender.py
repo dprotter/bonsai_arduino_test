@@ -82,7 +82,7 @@ class BonsaiSender:
 
     def send_data(self, pin, value):
         
-        self.command_stack.put(f'{pin}|{value}')
+        self.command_stack.put(f'{pin} {value}')
         if not self.active:
             self.run()
         else:
