@@ -47,11 +47,11 @@ class BonsaiSender:
             self.ser = ser.Serial(self.port, self.baudRate)
             time.sleep(1)
             self.ser.write('test_com_line 1 of 3\r'.encode('ascii'))
-            time.sleep(1)
+            time.sleep(0.25)
             self.ser.write('test_com_line 2 of 3\r'.encode('ascii'))
-            time.sleep(1)
+            time.sleep(0.25)
             self.ser.write('test_com_line 3 of 3\r'.encode('ascii'))
-            time.sleep(1)
+            time.sleep(0.25)
         except Exception as e:
             print('serial sender failed setup. If not sending serial data for Bonsai integration, ignore this warning.')
             print(e)
@@ -79,14 +79,12 @@ class BonsaiSender:
                 self._send_data(command)
         self.active = False
 
-    def send_data(self, pin, value):
+    
+    def send_data(self, string):
         
-        self.command_stack.put(f'{pin} {value}')
+        self.command_stack.put(string)
         if not self.active:
             self.run()
-        else:
-            print('run already active')
-
     def _send_string(self, string):
         formatted = string + '\r'
         formatted = formatted.encode('ascii')
