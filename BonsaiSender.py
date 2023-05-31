@@ -45,14 +45,13 @@ class BonsaiSender:
         # Initialize the port
         try:
             self.ser = ser.Serial(self.port, self.baudRate)
-
-            start = time.time() 
-            
-            while self.sending and time.time() - start < self.timeout:
-                time.sleep(0.05)
-            finished = time.time()
-            if finished - start > self.timeout:
-                print('serial sender failed to send test message ')
+            time.sleep(1)
+            self.ser.write('test_com_line 1 of 3\r'.encode('ascii'))
+            time.sleep(1)
+            self.ser.write('test_com_line 2 of 3\r'.encode('ascii'))
+            time.sleep(1)
+            self.ser.write('test_com_line 3 of 3\r'.encode('ascii'))
+            time.sleep(1)
         except Exception as e:
             print('serial sender failed setup. If not sending serial data for Bonsai integration, ignore this warning.')
             print(e)
